@@ -13,33 +13,46 @@ using System.Net.Sockets;
 namespace ThinkMachine
 {
     /// <summary>
-    /// An image loader that uses Google image search. Some code
+    /// An image loader that uses Google image search.
     /// </summary>
-    public class GoogleImageLoader : ImageLoader
+    public class GoogleImageSearch : ImageSearch
     {
-        public override void LoadKeywords(IEnumerable<string> Keywords)
+        public IEnumerable<string> Keywords
         {
-            this._Keywords = Keywords;
-            this._Done = false;
-            this._CurrentLocation = 0;
-            this._ImageQueue = new Queue<ImageInfo>();
-            this._QueueImages();
+            get
+            {
+                return this._Keywords;
+            }
+            set
+            {
+                lock (this)
+                {
+                    this._Keywords = value;
+                    this._Done = false;
+                    this._CurrentLocation = 0;
+                    this._ImageQueue = new Queue<ImageInfo>();
+                }
+            }
         }
 
-        public override Image Next()
+        public Image Next()
         {
             Image im = null;
             while (im == null)
             {
-                if (this._ImageQueue.Count == 0)
+                ImageInfo ne;
+                lock (this)
                 {
-                    this._QueueImages();
+                    if (this._ImageQueue.Count == 0)
+                    {
+                        this._QueueImages();
+                    }
+                    if (this._Done)
+                    {
+                        break;
+                    }
+                    ne = this._ImageQueue.Dequeue();
                 }
-                if (this._Done)
-                {
-                    break;
-                }
-                ImageInfo ne = this._ImageQueue.Dequeue();
                 try
                 {
                     im = this._DownloadImage(ne.Url);

@@ -52,8 +52,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GoogleImageLoader.cs" />
-    <Compile Include="ImageLoader.cs" />
+    <Compile Include="AsyncImageSource.cs" />
+    <Compile Include="GoogleImageSearch.cs" />
+    <Compile Include="ImageSource.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

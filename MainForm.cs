@@ -14,52 +14,24 @@ namespace ThinkMachine
         public MainForm()
         {
             InitializeComponent();
-            this._ImageStream = new GoogleImageLoader();
-            this._ImageStream.LoadKeywords(new string[] { "computer" });
-            this._MaxImageQueueSize = 100;
-            this._ImageQueue = new LinkedList<Image>();
+            this._GoogleImageSearch = new GoogleImageSearch();
+            this._GoogleImageSearch.Keywords = new string[] { "computer" };
 
-            this._QueueImage();
+            this._AsyncImageSource = new AsyncImageSource();
+            this._AsyncImageSource.Source = this._GoogleImageSearch;
+            this._AsyncImageSource.ThreadAmount = 3;
 
             Timer mtimer = new Timer();
             mtimer.Interval = 200;
             mtimer.Tick += new EventHandler(delegate
             {
-                lock (this._ImageQueue)
+                Image next = this._AsyncImageSource.Next();
+                if (next != null)
                 {
-                    if (this._ImageQueue.Count > 0)
-                    {
-                        Image next = this._ImageQueue.Last.Value;
-                        this._ImageQueue.RemoveLast();
-                        this.ShownImage = next;
-                        if (this._ImageQueue.Count < this._MaxImageQueueSize)
-                        {
-                            this._ImageQueue.AddFirst(next);
-                        }
-                    }
+                    this.ShownImage = next;
                 }
             });
             mtimer.Start();
-
-            BackgroundWorker bw = new BackgroundWorker();
-            bw.DoWork += new DoWorkEventHandler(delegate
-            {
-                while(true) {
-                    bool nc = false;
-                    lock (this._ImageQueue)
-                    {
-                        if (this._ImageQueue.Count < this._MaxImageQueueSize)
-                        {
-                            nc = true;
-                        }
-                    }
-                    if (nc)
-                    {
-                        this._QueueImage();
-                    }
-                }
-            });
-            bw.RunWorkerAsync();
         }
 
         /// <summary>
@@ -86,21 +58,7 @@ namespace ThinkMachine
             }
         }
 
-        /// <summary>
-        /// Takes an image from the image stream and puts it on the
-        /// image queue.
-        /// </summary>
-        private void _QueueImage()
-        {
-            Image next = this._ImageStream.Next();
-            lock(this._ImageQueue)
-            {
-                this._ImageQueue.AddLast(next);
-            }
-        }
-
-        private LinkedList<Image> _ImageQueue;
-        private int _MaxImageQueueSize;
-        private ImageLoader _ImageStream;
+        private GoogleImageSearch _GoogleImageSearch;
+        private AsyncImageSource _AsyncImageSource;
     }
 }

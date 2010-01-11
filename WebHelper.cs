@@ -23,6 +23,7 @@ namespace ThinkMachine
             request.UserAgent = "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.0.16) Gecko/2009120208 Firefox/3.0.16 (.NET CLR 3.5.30729)";
             request.Accept = "image/png,image/*;q=0.8,*/*;q=0.5";
             request.Referer = Url;
+            request.Timeout = 1000;
 
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             return response.GetResponseStream();
