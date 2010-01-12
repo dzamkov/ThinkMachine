@@ -1,0 +1,1 @@
+ThinkMachine is a screensaver that displays images in a Google image search one after another in short intervals. It was made in visual studio 9.0 for .net 2.0. You can compile or work on it by downloading the entire project into an empty folder and opening the .csproj file. You can also check out the download sections for the binaries in .scr form.
