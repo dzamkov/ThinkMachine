@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using System.Text;
 using System.Drawing;
 
@@ -27,7 +27,7 @@ namespace ThinkMachine
         /// Gets or sets the keywords to search for. After setting this, the images obtained
         /// with next will relate to the keywords.
         /// </summary>
-        IEnumerable<string> Keywords { get; set; }
+        string Keywords { get; set; }
 
     }
 }

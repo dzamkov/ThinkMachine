@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
@@ -17,17 +17,34 @@ namespace ThinkMachine
     /// </summary>
     public class GoogleImageSearch : ImageSearch
     {
-        public IEnumerable<string> Keywords
+        public string Keywords
         {
             get
             {
-                return this._Keywords;
+                return this._Settings.Keywords;
+            }
+            set
+            {
+                SearchSettings ns = this._Settings;
+                ns.Keywords = value;
+                this.Settings = ns;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the search settings for the image search.
+        /// </summary>
+        public SearchSettings Settings
+        {
+            get
+            {
+                return this._Settings;
             }
             set
             {
                 lock (this)
                 {
-                    this._Keywords = value;
+                    this._Settings = value;
                     this._Done = false;
                     this._CurrentLocation = 0;
                     this._ImageQueue = new Queue<ImageInfo>();
@@ -70,7 +87,11 @@ namespace ThinkMachine
         /// </summary>
         private void _QueueImages()
         {
-            string url = this._CreateUrl(this._Keywords, this._CurrentLocation, true, 0);
+            string url = this._CreateUrl(
+                this._Settings.Keywords, 
+                this._CurrentLocation, 
+                this._Settings.Filter, 
+                this._Settings.SafeSearch);
             IEnumerable<ImageInfo> newimages = this._MinePage(url);
             bool d = false;
             foreach (ImageInfo im in newimages)
@@ -90,39 +111,11 @@ namespace ThinkMachine
         /// <param name="Filter">Should filter similar results?</param>
         /// <param name="SafeSearch">SafeSearch level 0(None) - 2(Strict).</param>
         /// <returns>The url where the image can be searched for.</returns>
-        private string _CreateUrl(IEnumerable<string> Keywords, int Start, bool Filter, int SafeSearch)
+        private string _CreateUrl(string Keywords, int Start, bool Filter, int SafeSearch)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("http://images.google.com/images?q=");
-
-            // Keywords
-            bool prependplus = false;
-            foreach (string word in Keywords)
-            {
-                // Add plus to seperate keywords
-                if (prependplus)
-                {
-                    sb.Append('+');
-                }
-                else
-                {
-                    prependplus = true;
-                }
-
-                // Does the keyword have a space?
-                if (word.Contains(' '))
-                {
-                    // Split and add quotes
-                    string nw = word.Replace(' ', '+');
-                    sb.Append('"');
-                    sb.Append(HttpUtility.UrlEncode(nw));
-                    sb.Append('"');
-                }
-                else
-                {
-                    sb.Append(HttpUtility.UrlEncode(word));
-                }
-            }
+            sb.Append(HttpUtility.UrlEncode(Keywords.Replace(' ', '+')));
 
             // Start
             sb.Append("&start=");
@@ -152,19 +145,26 @@ namespace ThinkMachine
         /// <returns>A list of available images from the image results page.</returns>
         private IEnumerable<ImageInfo> _MinePage(string Url)
         {
-            List<ImageInfo> info = new List<ImageInfo>();
-            Stream response = WebHelper.Get(Url);
-            string content = new StreamReader(response).ReadToEnd();
-            Regex rg = new Regex(@"imgurl\\x3d(?<imgurl>.*?)\\x26imgrefurl\\x3d(?<imgrefurl>.*?)\\x26");
-            foreach (Match m in rg.Matches(content))
+            try
             {
-                info.Add(new ImageInfo()
+                List<ImageInfo> info = new List<ImageInfo>();
+                Stream response = WebHelper.Get(Url);
+                string content = new StreamReader(response).ReadToEnd();
+                Regex rg = new Regex(@"imgurl\\x3d(?<imgurl>.*?)\\x26imgrefurl\\x3d(?<imgrefurl>.*?)\\x26");
+                foreach (Match m in rg.Matches(content))
                 {
-                    Url = m.Groups["imgurl"].Value,
-                    Source = m.Groups["imgrefurl"].Value
-                });
+                    info.Add(new ImageInfo()
+                    {
+                        Url = m.Groups["imgurl"].Value,
+                        Source = m.Groups["imgrefurl"].Value
+                    });
+                }
+                return info;
             }
-            return info;
+            catch (Exception)
+            {
+                return new List<ImageInfo>();
+            }
         }
 
         /// <summary>
@@ -178,7 +178,7 @@ namespace ThinkMachine
             return Image.FromStream(rs);
         }
 
-        private IEnumerable<string> _Keywords;
+        private SearchSettings _Settings;
         private int _CurrentLocation;
         private Queue<ImageInfo> _ImageQueue;
         private bool _Done;
@@ -197,6 +197,16 @@ namespace ThinkMachine
             /// Url of the source of the image.
             /// </summary>
             public string Source;
+        }
+
+        /// <summary>
+        /// Enumeration of search settings that can be for image searching.
+        /// </summary>
+        public struct SearchSettings
+        {
+            public string Keywords;
+            public bool Filter;
+            public int SafeSearch;
         }
     }
 }
