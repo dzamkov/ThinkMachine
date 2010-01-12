@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 using System.Windows.Forms;
 
+using Microsoft.Win32;
+
 namespace ThinkMachine
 {
     static class Program
@@ -17,11 +19,24 @@ namespace ThinkMachine
             Application.SetCompatibleTextRenderingDefault(false);
             Settings se;
 
+            // Configuration information
+            string key = "Software\\ThinkMachine\\Search";
+            RegistryKey rk = Registry.CurrentUser.OpenSubKey(key, true);
             GoogleImageSearch.SearchSettings settings = new GoogleImageSearch.SearchSettings();
-            settings.Keywords = Config.Default.Query;
-            settings.Filter = Config.Default.Filter;
-            settings.SafeSearch = Config.Default.SafeSearch;
+            if(rk != null)
+            {
+                try
+                {
+                    settings.Keywords = (string)rk.GetValue("Keywords");
+                    settings.Filter = (int)rk.GetValue("Filter") == 0 ? false : true;
+                    settings.SafeSearch = (int)rk.GetValue("SafeSearch");
+                }
+                catch (InvalidCastException)
+                {
+                }
+            }
 
+            // Screensaver arguments
             if (Args.Length >= 1)
             {
                 switch (Args[0].ToLower().Trim().Substring(0, 2))
@@ -33,10 +48,14 @@ namespace ThinkMachine
                         if (se.ShowDialog() == DialogResult.OK)
                         {
                             settings = se.SearchSettings;
-                            Config.Default.Query = settings.Keywords;
-                            Config.Default.Filter = settings.Filter;
-                            Config.Default.SafeSearch = settings.SafeSearch;
-                            Config.Default.Save();
+                            if (rk == null)
+                            {
+                                rk = Registry.CurrentUser.CreateSubKey(key);
+                            }
+
+                            rk.SetValue("Keywords", settings.Keywords);
+                            rk.SetValue("Filter", (int)(settings.Filter ? 1 : 0));
+                            rk.SetValue("SafeSearch", settings.SafeSearch);
                         }
                         return;
 

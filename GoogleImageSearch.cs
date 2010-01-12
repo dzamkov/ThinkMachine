@@ -15,7 +15,7 @@ namespace ThinkMachine
     /// <summary>
     /// An image loader that uses Google image search.
     /// </summary>
-    public class GoogleImageSearch : ImageSearch
+    public class GoogleImageSearch : ImageSource, ImageSearch
     {
         public string Keywords
         {
@@ -28,6 +28,25 @@ namespace ThinkMachine
                 SearchSettings ns = this._Settings;
                 ns.Keywords = value;
                 this.Settings = ns;
+            }
+        }
+
+        public object SourceIdentifier
+        {
+            get
+            {
+                return this._Settings;
+            }
+        }
+
+        /// <summary>
+        /// Gets the amount of images downloaded by this source.
+        /// </summary>
+        public int DownloadedImages
+        {
+            get
+            {
+                return this._CurrentLocation;
             }
         }
 
@@ -69,6 +88,7 @@ namespace ThinkMachine
                         break;
                     }
                     ne = this._ImageQueue.Dequeue();
+                    this._CurrentLocation++;
                 }
                 try
                 {
@@ -97,7 +117,6 @@ namespace ThinkMachine
             foreach (ImageInfo im in newimages)
             {
                 d = true;
-                this._CurrentLocation++;
                 this._ImageQueue.Enqueue(im);
             }
             this._Done = !d;

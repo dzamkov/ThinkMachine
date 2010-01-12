@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 using System.Text;
 using System.Drawing;
@@ -28,6 +29,5 @@ namespace ThinkMachine
         /// with next will relate to the keywords.
         /// </summary>
         string Keywords { get; set; }
-
     }
 }

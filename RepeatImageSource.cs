@@ -16,6 +16,7 @@ namespace ThinkMachine
         {
             this._Images = new List<_ImageInfo>();
             this._Reserve = 10;
+            this._Frame = 0;
         }
 
         public Image Next()
@@ -35,6 +36,7 @@ namespace ThinkMachine
                     {
                         _ImageInfo info = this._Images[0];
                         info.Usages++;
+                        info.LastSeen = this._Frame;
                         next = info.Image;
                     }
                 }
@@ -43,8 +45,10 @@ namespace ThinkMachine
                     _ImageInfo ninfo = new _ImageInfo();
                     ninfo.Image = next;
                     ninfo.Usages = 1;
+                    ninfo.LastSeen = this._Frame;
                     this._Images.Add(ninfo);
                 }
+                this._Frame++;
                 return next;
             }
         }
@@ -101,7 +105,35 @@ namespace ThinkMachine
                 new Comparison<_ImageInfo>(
                     delegate(_ImageInfo A, _ImageInfo B)
                     {
-                        return A.Usages.CompareTo(B.Usages);
+                        if (A.Usages == B.Usages)
+                        {
+                            if (A.LastSeen == B.LastSeen)
+                            {
+                                return 0;
+                            }
+                            else
+                            {
+                                if (A.LastSeen < B.LastSeen)
+                                {
+                                    return -1;
+                                }
+                                else
+                                {
+                                    return 1;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (A.Usages > B.Usages)
+                            {
+                                return 1;
+                            }
+                            else
+                            {
+                                return -1;
+                            }
+                        }
                     }));
 
             // Remove extra
@@ -122,10 +154,12 @@ namespace ThinkMachine
         {
             public Image Image;
             public int Usages;
+            public int LastSeen; // Frame where this image was last seen.
         }
 
         private List<_ImageInfo> _Images;
         private ImageSource _Source;
         private int _Reserve;
+        private int _Frame; // Images given.
     }
 }

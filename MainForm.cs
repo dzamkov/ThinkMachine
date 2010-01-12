@@ -20,16 +20,14 @@ namespace ThinkMachine
             this._AsyncImageSource = new AsyncImageSource();
             this._AsyncImageSource.Source = this._GoogleImageSearch;
             this._AsyncImageSource.MaxQueueSize = 5;
-            this._AsyncImageSource.ThreadAmount = 2;
+            this._AsyncImageSource.ThreadAmount = 3;
 
             RepeatImageSource ris = new RepeatImageSource();
             this._FinalImageSource = ris;
             ris.Source = this._AsyncImageSource;
-            ris.Reserve = 30;
+            ris.Reserve = 40;
 
             Cursor.Hide();
-
-
 
             Timer mtimer = new Timer();
             mtimer.Interval = 250;
@@ -93,6 +91,14 @@ namespace ThinkMachine
 
                 e.Graphics.DrawImage(this._ShownImage, imagerect);
             }
+
+#if DEBUG
+            // Debug information
+            Font f = new Font(FontFamily.GenericMonospace, 12);
+            e.Graphics.DrawString(
+                "Downloaded Images: " + this._GoogleImageSearch.DownloadedImages, 
+                f, Brushes.White, new Point(0, 0));
+#endif
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
